@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { ParticleSystem } from './components/ParticleSystem';
@@ -10,24 +10,25 @@ function App() {
   const [shape, setShape] = useState<ParticleShape>(ParticleShape.HEART);
   const [gesture, setGesture] = useState<HandGesture>(HandGesture.CLOSED);
   const [isConnected, setIsConnected] = useState(false);
+  const [isConfigured, setIsConfigured] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const geminiService = useRef<GeminiLiveService | null>(null);
 
   // Initialize service
   useEffect(() => {
-    // In HBuilder X / Local Vite dev, ensure you have a .env file with VITE_API_KEY=...
-    // The vite.config.ts will map it to process.env.API_KEY
+    // Check for API Key provided by Vite env vars
     const apiKey = process.env.API_KEY; 
     
-    if (apiKey) {
-      geminiService.current = new GeminiLiveService(
-        apiKey,
-        (g) => setGesture(g),
-        (connected) => setIsConnected(connected)
-      );
-    } else {
-      console.warn("API Key not found. Please check your .env file or configuration.");
+    if (!apiKey || apiKey.includes('placeholder')) {
+      setIsConfigured(false);
+      return;
     }
+
+    geminiService.current = new GeminiLiveService(
+      apiKey,
+      (g) => setGesture(g),
+      (connected) => setIsConnected(connected)
+    );
     
     return () => {
       geminiService.current?.disconnect();
@@ -69,6 +70,24 @@ function App() {
       }
     }
   };
+
+  if (!isConfigured) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-black text-white p-6 text-center">
+        <h1 className="text-3xl font-bold mb-4 text-red-500">Configuration Missing</h1>
+        <p className="max-w-md text-gray-300 mb-6">
+          The Gemini API Key is missing. 
+        </p>
+        <div className="bg-gray-900 p-4 rounded-lg text-left text-sm font-mono border border-gray-800">
+          <p className="mb-2 text-gray-400">If deploying to Vercel/Netlify:</p>
+          <p className="text-green-400">Add Environment Variable: <br/>VITE_API_KEY = your_key_here</p>
+          <div className="h-4"></div>
+          <p className="mb-2 text-gray-400">If running locally:</p>
+          <p className="text-green-400">Create a .env file with: <br/>VITE_API_KEY=your_key_here</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-full bg-black select-none overflow-hidden">

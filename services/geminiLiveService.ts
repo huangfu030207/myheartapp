@@ -1,5 +1,8 @@
-import { GoogleGenAI, LiveSession, FunctionDeclaration, Type, LiveServerMessage, Modality } from "@google/genai";
+import { GoogleGenAI, FunctionDeclaration, Type, LiveServerMessage, Modality } from "@google/genai";
 import { HandGesture } from "../types";
+
+// Type definition for LiveSession as it is not exported from the package
+type LiveSession = Awaited<ReturnType<GoogleGenAI['live']['connect']>>;
 
 // Tool definition for the model to control the app
 const controlGestureFunction: FunctionDeclaration = {
